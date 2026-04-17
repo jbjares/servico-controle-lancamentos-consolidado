@@ -1,0 +1,90 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" version="29.3.6">
+  <diagram name="04 Sequencia Lancamento" id="0">
+    <mxGraphModel dx="1042" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cli" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" value="Cliente" vertex="1">
+          <mxGeometry height="60" width="120" x="60" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_cli" parent="1" style="shape=line;strokeWidth=1;dashed=1;" vertex="1">
+          <mxGeometry height="600" width="1" x="120" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="lan" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Servico de Lancamentos" vertex="1">
+          <mxGeometry height="60" width="120" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_lan" parent="1" style="shape=line;strokeWidth=1;dashed=1;" vertex="1">
+          <mxGeometry height="600" width="1" x="320" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="scl" parent="1" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" value="Schema Lancamentos" vertex="1">
+          <mxGeometry height="60" width="120" x="460.5" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="line_scl" parent="1" style="shape=line;strokeWidth=1;dashed=1;" vertex="1">
+          <mxGeometry height="600" width="1" x="520" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="rmq" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="RabbitMQ" vertex="1">
+          <mxGeometry height="60" width="120" x="660" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_rmq" parent="1" style="shape=line;strokeWidth=1;dashed=1;" vertex="1">
+          <mxGeometry height="600" width="1" x="720" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="con" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" value="Servico de\nConsolidado" vertex="1">
+          <mxGeometry height="60" width="120" x="860" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_con" parent="1" style="shape=line;strokeWidth=1;dashed=1;" vertex="1">
+          <mxGeometry height="600" width="1" x="920" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="evt2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="Eventos Processados" vertex="1">
+          <mxGeometry height="60" width="120" x="1110" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_evt2" parent="1" style="shape=line;strokeWidth=1;dashed=1;" vertex="1">
+          <mxGeometry height="600" width="1" x="1120" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" value="POST /lancamentos" vertex="1">
+          <mxGeometry height="40" width="180" x="30" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="se1" edge="1" parent="1" source="cli" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="lan" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" value="Persistir lançamento" vertex="1">
+          <mxGeometry height="40" width="180" x="430.5" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="se2" edge="1" parent="1" source="lan" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="scl" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" value="201 Created" vertex="1">
+          <mxGeometry height="40" width="180" x="140" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="se3" edge="1" parent="1" source="lan" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="cli" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" value="Publicar evento" vertex="1">
+          <mxGeometry height="40" width="180" x="230.5" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="se4" edge="1" parent="1" source="lan" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="rmq" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" value="Entregar evento" vertex="1">
+          <mxGeometry height="40" width="180" x="630.5" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="se5" edge="1" parent="1" source="rmq" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="con" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" value="Verificar idEvento" vertex="1">
+          <mxGeometry height="40" width="180" x="840" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="se6" edge="1" parent="1" source="con" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="evt2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" value="Evento novo: atualiza saldo\ne registra processamento" vertex="1">
+          <mxGeometry height="60" width="260" x="1040" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="se7" edge="1" parent="1" source="con" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="evt2" value="ACK após sucesso">
+          <mxGeometry relative="1" y="40" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

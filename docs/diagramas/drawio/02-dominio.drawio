@@ -1,0 +1,25 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" version="29.3.6">
+  <diagram name="02 Dominio" id="0">
+    <mxGraphModel dx="1042" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lanc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Lancamento&lt;br&gt;- id &lt;br&gt;- tipo&lt;br&gt;- valor&lt;br&gt;- dataEfetiva&lt;br&gt;- descricao&lt;br&gt;- criadoEm" vertex="1">
+          <mxGeometry height="180" width="240" x="50" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="consd" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" value="ConsolidadoDiario&lt;br&gt;- dataEfetiva&lt;br&gt;- totalCreditos&lt;br&gt;- totalDebitos&lt;br&gt;- saldoFinal&lt;br&gt;- ultimaAtualizacao" vertex="1">
+          <mxGeometry height="180" width="280" x="430" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="evt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="EventoProcessado&lt;br&gt;- idEvento&lt;br&gt;- correlationId&lt;br&gt;- processadoEm" vertex="1">
+          <mxGeometry height="140" width="260" x="790" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="de1" edge="1" parent="1" source="lanc" style="endArrow=open;html=1;strokeWidth=2;" target="consd" value="impacta saldo do dia">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="de2" edge="1" parent="1" source="evt" style="endArrow=open;html=1;strokeWidth=2;dashed=1;" target="consd" value="protege idempotência">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

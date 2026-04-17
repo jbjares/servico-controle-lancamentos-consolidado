@@ -1,0 +1,58 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" version="29.3.6">
+  <diagram name="03 Componentes" id="0">
+    <mxGraphModel dx="1042" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=0;" value="Contexto: Lançamentos" vertex="1">
+          <mxGeometry height="300" width="520" x="40" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Controller" vertex="1">
+          <mxGeometry height="60" width="110" x="90" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="ls" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Service" vertex="1">
+          <mxGeometry height="60" width="110" x="230" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="lr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Repository" vertex="1">
+          <mxGeometry height="60" width="110" x="380" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="lp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="PublicadorEvento" vertex="1">
+          <mxGeometry height="60" width="150" x="210" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ce1" edge="1" parent="1" source="lc" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="ls" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ce2" edge="1" parent="1" source="ls" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="lr" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ce3" edge="1" parent="1" source="ls" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="lp" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=0;" value="Contexto: Consolidado" vertex="1">
+          <mxGeometry height="300" width="560" x="645" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" value="Consumer" vertex="1">
+          <mxGeometry height="60" width="110" x="710" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" value="Service" vertex="1">
+          <mxGeometry height="60" width="110" x="860" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" value="Repository" vertex="1">
+          <mxGeometry height="60" width="110" x="1010" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="ce" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="RepoEventoProcessado" vertex="1">
+          <mxGeometry height="60" width="160" x="845" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="ce4" edge="1" parent="1" source="cc" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="cs" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ce5" edge="1" parent="1" source="cs" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="cr" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ce6" edge="1" parent="1" source="cs" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="ce" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
