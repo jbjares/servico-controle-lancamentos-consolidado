@@ -1,6 +1,5 @@
 # servico-controle-lancamentos-consolidado
 ---
-# Entrega de Arquitetura
+# [Documento de Arquitetura](`docs/arquitetura.md`) 
 
-Consulte `docs/arquitetura.md`.
 
