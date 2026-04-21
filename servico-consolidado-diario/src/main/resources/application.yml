@@ -1,0 +1,74 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: servico-consolidado-diario
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/controle_financeiro}
+    username: ${SPRING_DATASOURCE_USERNAME:app}
+    password: ${SPRING_DATASOURCE_PASSWORD:app}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ${APP_DB_SCHEMA:consolidado}
+    open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: ${APP_DB_SCHEMA:consolidado}
+    parameters:
+      schemaName: ${APP_DB_SCHEMA:consolidado}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: ${APP_RABBIT_LISTENER_RETRY_MAX_ATTEMPTS:3}
+          initial-interval: ${APP_RABBIT_LISTENER_RETRY_INITIAL_INTERVAL:1s}
+          multiplier: ${APP_RABBIT_LISTENER_RETRY_MULTIPLIER:2.0}
+          max-interval: ${APP_RABBIT_LISTENER_RETRY_MAX_INTERVAL:10s}
+
+app:
+  mensageria:
+    exchange: lancamentos.exchange
+    routing-key: lancamento.registrado
+    fila: lancamento.registrado.fila
+    dead-letter-exchange: lancamentos.dlx
+    dead-letter-routing-key: lancamento.registrado.dlq
+    dead-letter-fila: lancamento.registrado.dlq
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState,db,rabbit
+        liveness:
+          include: livenessState
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    br.com.exemplo.consolidado: ${LOG_LEVEL_APP:INFO}
+    org.springframework.amqp: ${LOG_LEVEL_AMQP:WARN}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} level=%5p service=${spring.application.name} thread=%t logger=%logger{36} msg=%m%n"

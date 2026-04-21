@@ -34,7 +34,7 @@
         <mxCell id="e2" edge="1" parent="1" source="u" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="c" value="Consulta saldo">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e3" edge="1" parent="1" source="l" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="mq" value="Publica evento">
+        <mxCell id="e3" edge="1" parent="1" source="l" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="mq" value="Publica Outbox">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e4" edge="1" parent="1" source="mq" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="c" value="Entrega evento">

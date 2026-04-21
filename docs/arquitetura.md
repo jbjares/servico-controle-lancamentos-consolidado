@@ -216,12 +216,15 @@ Em mensageria, uma mesma mensagem pode ser entregue mais de uma vez. Para evitar
 
 ### 8.4 Controle de Processamento
 
-O controle de processamento foi mantido intencionalmente simples na prova de conceito:
+O controle de processamento usa Outbox no produtor e idempotência no consumidor:
 
-- o RabbitMQ gerencia a entrega;
-- o ACK só ocorre após atualização bem-sucedida do consolidado;
-- falhas geram reentrega futura;
-- logs básicos registram a exceção.
+- o lançamento e o registro de Outbox são gravados na mesma transação;
+- o publisher reserva eventos `PENDENTE` ou `ERRO` como `PROCESSANDO`;
+- a reserva possui `processandoPor`, `processandoEm` e `claimExpiraEm`;
+- a publicação aguarda publisher confirm do RabbitMQ;
+- falhas temporárias liberam o evento para nova tentativa com backoff;
+- o ACK do consumidor só ocorre após atualização bem-sucedida do consolidado;
+- a tabela `evento_processado` evita dupla contabilização.
 
 ---
 
@@ -256,14 +259,26 @@ O controle de processamento foi mantido intencionalmente simples na prova de con
 | processado_em | TIMESTAMP | Não | Momento do sucesso |
 | correlation_id | VARCHAR(100) | Não | Rastreabilidade |
 
-### 9.4 Evolução Futura: Tabela `outbox_evento`
+### 9.4 Tabela `outbox_evento`
 
 | Coluna | Tipo | PK | Observações |
 |---|---|---:|---|
 | id_evento | UUID | Sim | Id do evento |
-| payload | JSONB | Não | Corpo do evento |
-| status | VARCHAR(30) | Não | `PENDENTE`, `PUBLICADO`, `ERRO` |
+| tipo_evento | VARCHAR(120) | Não | Tipo lógico do evento |
+| correlation_id | VARCHAR(120) | Não | Correlação da jornada |
+| exchange_name | VARCHAR(120) | Não | Exchange RabbitMQ |
+| routing_key | VARCHAR(120) | Não | Routing key |
+| payload | TEXT | Não | Corpo JSON do evento |
+| status | VARCHAR(20) | Não | `PENDENTE`, `PROCESSANDO`, `PUBLICADO`, `ERRO` |
+| tentativas | INT | Não | Quantidade de tentativas |
+| proxima_tentativa_em | TIMESTAMP | Não | Próxima tentativa elegível |
 | criado_em | TIMESTAMP | Não | Data de criação |
+| atualizado_em | TIMESTAMP | Não | Última atualização |
+| publicado_em | TIMESTAMP | Não | Publicação confirmada |
+| processando_por | VARCHAR(120) | Não | Worker que reservou o evento |
+| processando_em | TIMESTAMP | Não | Início da reserva |
+| claim_expira_em | TIMESTAMP | Não | Expiração da reserva |
+| ultimo_erro | VARCHAR(1000) | Não | Último erro |
 
 ---
 
@@ -292,19 +307,17 @@ servico-consolidado-diario/
 
 ```text
 db/changelog/
-├── db.changelog-master.xml
-├── V001__criar_tabela_lancamento.xml
-└── V002__indices_lancamento.xml
+└── db.changelog-master.xml
 ```
 
 e
 
 ```text
 db/changelog/
-├── db.changelog-master.xml
-├── V001__criar_tabela_consolidado.xml
-└── V002__criar_tabela_evento_processado.xml
+└── db.changelog-master.xml
 ```
+
+Na implementação atual, os changesets estão consolidados no `db.changelog-master.xml` de cada serviço para facilitar a leitura da POC. Em uma evolução produtiva, os changesets podem ser separados por arquivo mantendo o mesmo changelog master como orquestrador.
 
 ---
 
@@ -391,7 +404,8 @@ flowchart LR
     U -->|POST /lancamentos| L
     U -->|GET /consolidados| C
     L -->|Grava lançamento| DB
-    L -->|Publica evento| MQ
+    L -->|Grava evento no Outbox| DB
+    L -->|Publica Outbox com confirm| MQ
     MQ -->|Entrega evento| C
     C -->|Atualiza consolidado| DB
 ```
@@ -419,11 +433,27 @@ classDiagram
         +Timestamp ultimaAtualizacao
     }
 
+    class OutboxEvent {
+        +UUID idEvento
+        +String tipoEvento
+        +String correlationId
+        +String exchangeName
+        +String routingKey
+        +String payload
+        +OutboxStatus status
+        +Integer tentativas
+        +Timestamp claimExpiraEm
+    }
+
     class EventoProcessado {
         +UUID idEvento
         +String correlationId
         +Timestamp processadoEm
     }
+
+    Lancamento --> OutboxEvent : gera
+    OutboxEvent --> ConsolidadoDiario : publica evento
+    ConsolidadoDiario --> EventoProcessado : registra idempotência
 ```
 
 ### 12.3 Componentes Internos
@@ -436,7 +466,9 @@ flowchart TB
         LC[Controller]
         LS[Service]
         LR[Repository]
-        LP[PublicadorEvento]
+        OS[OutboxService]
+        OP[OutboxPublisherService]
+        OR[OutboxRepository]
     end
 
     subgraph ServicoConsolidado
@@ -448,7 +480,11 @@ flowchart TB
 
     LC --> LS
     LS --> LR
-    LS --> LP
+    LS --> OS
+    OS --> OR
+    OP --> OR
+    OP --> MQ[RabbitMQ]
+    MQ --> CC
     CC --> CS
     CS --> CR
     CS --> CE
@@ -470,8 +506,11 @@ sequenceDiagram
 
     Cliente->>Lancamentos: POST /lancamentos
     Lancamentos->>SchemaLanc: Persistir lançamento
+    Lancamentos->>SchemaLanc: Registrar evento no Outbox
     Lancamentos-->>Cliente: 201 Created
-    Lancamentos->>MQ: Publicar evento
+    Lancamentos->>SchemaLanc: Reservar evento PROCESSANDO
+    Lancamentos->>MQ: Publicar evento com publisher confirm
+    Lancamentos->>SchemaLanc: Marcar Outbox PUBLICADO
     MQ->>Consolidado: Entregar evento
     Consolidado->>EventosProc: Verificar idEvento
     alt Evento já processado
@@ -592,18 +631,35 @@ Cada serviço deve conter README próprio explicando:
 
 ### 16.3 Subida Local com Docker Compose
 
-A estratégia recomendada é:
+A solução possui três modos de execução:
 
 ```bash
 docker compose up --build
 ```
 
-Esse comando deve:
+Sobe o core funcional: PostgreSQL, RabbitMQ, Nginx e as quatro réplicas dos serviços.
+
+```bash
+docker compose --profile observability up --build
+```
+
+Sobe o core mais Prometheus e Grafana.
+
+```bash
+docker compose --profile full-ops up --build
+```
+
+Sobe a stack completa com Loki, Promtail, Alertmanager e exporters.
+
+O passo a passo operacional detalhado está em [`execucao-testes.md`](execucao-testes.md).
+
+O modo core deve:
 
 - subir PostgreSQL;
 - subir RabbitMQ;
-- subir o serviço de lançamentos;
-- subir o serviço de consolidado diário;
+- subir duas réplicas do serviço de lançamentos;
+- subir duas réplicas do serviço de consolidado diário;
+- subir Nginx como load balancer;
 - aplicar migrações Liquibase;
 - expor serviços para teste local.
 
