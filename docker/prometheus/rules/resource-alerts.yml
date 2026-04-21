@@ -1,0 +1,56 @@
+groups:
+  - name: resource-alerts
+    rules:
+      - alert: MemoriaHostAlta
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memoria do host acima de 85%"
+          description: "Uso de memoria do host/exporter esta alto."
+
+      - alert: CpuHostAlta
+        expr: (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU do host acima de 85%"
+          description: "Uso medio de CPU esta alto por mais de 5 minutos."
+
+      - alert: DiscoHostAlto
+        expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"})) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disco acima de 85%"
+          description: "Uso de disco esta alto em {{ $labels.mountpoint }}."
+
+      - alert: DiscoPodeEncherEm24h
+        expr: predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"}[1h], 24 * 3600) < 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disco pode encher em 24h"
+          description: "A tendencia indica esgotamento de disco em {{ $labels.mountpoint }}."
+
+      - alert: ContainerMemoriaAlta
+        expr: ((container_memory_working_set_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) > 0.85) and on (name) (container_spec_memory_limit_bytes{name!=""} > 0)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memoria de container acima de 85%"
+          description: "Container {{ $labels.name }} esta consumindo memoria alta."
+
+      - alert: NginxLoadBalancerIndisponivel
+        expr: nginx_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Load balancer Nginx indisponivel"
+          description: "O exporter nao consegue coletar metricas do Nginx."

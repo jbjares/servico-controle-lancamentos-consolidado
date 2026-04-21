@@ -1,0 +1,101 @@
+groups:
+  - name: application-alerts
+    rules:
+      - alert: ServicoSpringIndisponivel
+        expr: up{job=~"servico-lancamentos|servico-consolidado-diario"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Servico Spring indisponivel"
+          description: "O target {{ $labels.job }} nao esta respondendo ao Prometheus."
+
+      - alert: ErrosHttp5xx
+        expr: sum by (job) (rate(http_server_requests_seconds_count{job=~"servico-.*",status=~"5.."}[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Erros HTTP 5xx detectados"
+          description: "O servico {{ $labels.job }} esta retornando respostas 5xx."
+
+      - alert: LogsErroAplicacao
+        expr: sum by (job) (increase(logback_events_total{job=~"servico-lancamentos|servico-consolidado-diario",level="error"}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Logs ERROR detectados"
+          description: "O servico {{ $labels.job }} registrou logs ERROR nos ultimos 5 minutos."
+
+      - alert: LogsWarningElevados
+        expr: sum by (job) (increase(logback_events_total{job=~"servico-lancamentos|servico-consolidado-diario",level="warn"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Volume elevado de logs WARN"
+          description: "O servico {{ $labels.job }} registrou mais de 10 warnings em 5 minutos."
+
+      - alert: OutboxComEventosEmErro
+        expr: app_outbox_events{status="ERRO"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Outbox com eventos em erro"
+          description: "Existem eventos em ERRO no Outbox do servico de lancamentos."
+
+      - alert: OutboxBacklogPendente
+        expr: app_outbox_events{status="PENDENTE"} > 100
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backlog no Outbox"
+          description: "Mais de 100 eventos estao pendentes no Outbox por mais de 3 minutos."
+
+      - alert: OutboxEventoPendenteAntigo
+        expr: app_outbox_oldest_pending_age_seconds > 60
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Evento antigo pendente no Outbox"
+          description: "Ha evento pendente/erro no Outbox ha mais de 60 segundos."
+
+      - alert: ColetorDeLogsIndisponivel
+        expr: up{job=~"loki|promtail"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Coleta centralizada de logs indisponivel"
+          description: "O componente {{ $labels.job }} nao esta disponivel para coleta/consolidacao de logs."
+
+      - alert: RabbitMQFilaPrincipalSemConsumidor
+        expr: rabbitmq_queue_consumers{queue="lancamento.registrado.fila"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Fila principal sem consumidor"
+          description: "A fila lancamento.registrado.fila esta sem consumidores ativos."
+
+      - alert: RabbitMQBacklogFilaPrincipal
+        expr: rabbitmq_queue_messages_ready{queue="lancamento.registrado.fila"} > 100
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backlog na fila principal"
+          description: "A fila lancamento.registrado.fila possui mais de 100 mensagens prontas."
+
+      - alert: RabbitMQDLQComMensagens
+        expr: rabbitmq_queue_messages_ready{queue="lancamento.registrado.dlq"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mensagens na DLQ"
+          description: "Existem mensagens na DLQ lancamento.registrado.dlq."

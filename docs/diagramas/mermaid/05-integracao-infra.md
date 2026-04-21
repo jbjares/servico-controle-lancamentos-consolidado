@@ -10,8 +10,8 @@ flowchart TB
         PG[(PostgreSQL)]
     end
 
-    L --> MQ
+    L -->|Outbox publisher| MQ
     MQ --> C
-    L --> PG
-    C --> PG
+    L -->|schema lancamentos| PG
+    C -->|schema consolidado| PG
 ```
