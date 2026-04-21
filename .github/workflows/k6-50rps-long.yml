@@ -1,0 +1,101 @@
+name: K6 50 RPS Long
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: Duracao do teste k6 50 req/s
+        required: false
+        default: 1m
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  k6-50rps-long:
+    name: RNF k6 50 req/s longo
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Definir duracao do k6
+        id: k6_duration
+        run: |
+          duration="${{ inputs.duration }}"
+          if [ -z "$duration" ]; then
+            duration="1m"
+          fi
+
+          case "$duration" in
+            *ms)
+              millis="${duration%ms}"
+              expected=$(( (50 * millis + 999) / 1000 ))
+              ;;
+            *s)
+              seconds="${duration%s}"
+              expected=$(( 50 * seconds ))
+              ;;
+            *m)
+              minutes="${duration%m}"
+              expected=$(( 50 * minutes * 60 ))
+              ;;
+            *h)
+              hours="${duration%h}"
+              expected=$(( 50 * hours * 3600 ))
+              ;;
+            *)
+              echo "Duracao invalida: $duration" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "duration=$duration" >> "$GITHUB_OUTPUT"
+          echo "expected_iterations=$expected" >> "$GITHUB_OUTPUT"
+
+      - name: Subir stack com observabilidade leve
+        run: docker compose --profile observability up --build -d
+
+      - name: Aguardar readiness
+        run: |
+          ./tests/ci/wait-url.sh \
+            http://localhost:8080/health \
+            http://localhost:8081/actuator/health/readiness \
+            http://localhost:8084/actuator/health/readiness \
+            http://localhost:8082/actuator/health/readiness \
+            http://localhost:8085/actuator/health/readiness \
+            http://localhost:9090/-/ready \
+            http://localhost:3000/api/health
+
+      - name: k6 50 req/s longo via load balancer
+        env:
+          K6_DURATION: ${{ steps.k6_duration.outputs.duration }}
+          TEST_RUN_ID: nightly-50rps-${{ github.run_id }}-${{ github.run_attempt }}
+          DATA_EFETIVA: 2099-01-04
+        run: |
+          docker run --rm --network host \
+            -e BASE_URL=http://localhost:8080 \
+            -e RATE=50 \
+            -e DURATION="$K6_DURATION" \
+            -e MAX_LOSS_RATE=0.05 \
+            -e DATA_EFETIVA="$DATA_EFETIVA" \
+            -e TEST_RUN_ID="$TEST_RUN_ID" \
+            -v "$PWD/tests/load/k6:/scripts:ro" \
+            grafana/k6 run /scripts/lancamentos-50rps.js
+
+      - name: Validar processamento Outbox e consumidor
+        env:
+          TEST_RUN_ID: nightly-50rps-${{ github.run_id }}-${{ github.run_attempt }}
+          DATA_EFETIVA: 2099-01-04
+          EXPECTED_ITERATIONS: ${{ steps.k6_duration.outputs.expected_iterations }}
+          MAX_LOSS_RATE: 0.05
+        run: ./tests/ci/verify-k6-outbox-and-cleanup.sh
+
+      - name: Logs em caso de falha
+        if: failure()
+        run: docker compose --profile observability logs --tail=300
+
+      - name: Encerrar stack
+        if: always()
+        run: docker compose --profile observability down -v

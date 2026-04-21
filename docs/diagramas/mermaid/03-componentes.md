@@ -4,7 +4,9 @@ flowchart TB
         LC[Controller]
         LS[Service]
         LR[Repository]
-        LP[PublicadorEvento]
+        OS[OutboxService]
+        OP[OutboxPublisherService]
+        OR[OutboxRepository]
     end
 
     subgraph ServicoConsolidado
@@ -16,7 +18,11 @@ flowchart TB
 
     LC --> LS
     LS --> LR
-    LS --> LP
+    LS --> OS
+    OS --> OR
+    OP --> OR
+    OP --> MQ[RabbitMQ]
+    MQ --> CC
     CC --> CS
     CS --> CR
     CS --> CE

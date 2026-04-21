@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="1-criar-schema-consolidado" author="chatgpt">
+        <sql>CREATE SCHEMA IF NOT EXISTS ${schemaName};</sql>
+    </changeSet>
+
+    <changeSet id="2-criar-tabela-consolidado" author="chatgpt">
+        <createTable schemaName="${schemaName}" tableName="consolidado_diario">
+            <column name="data_efetiva" type="DATE">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="total_creditos" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_debitos" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="saldo_final" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ultima_atualizacao" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3-criar-tabela-evento-processado" author="chatgpt">
+        <createTable schemaName="${schemaName}" tableName="evento_processado">
+            <column name="id_evento" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="correlation_id" type="VARCHAR(100)"/>
+            <column name="processado_em" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

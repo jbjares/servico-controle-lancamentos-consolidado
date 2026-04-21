@@ -1,0 +1,93 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: servico-lancamentos
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/controle_financeiro}
+    username: ${SPRING_DATASOURCE_USERNAME:app}
+    password: ${SPRING_DATASOURCE_PASSWORD:app}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ${APP_DB_SCHEMA:lancamentos}
+    open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: ${APP_DB_SCHEMA:lancamentos}
+    parameters:
+      schemaName: ${APP_DB_SCHEMA:lancamentos}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+      retry:
+        enabled: true
+        max-attempts: ${APP_RABBIT_TEMPLATE_RETRY_MAX_ATTEMPTS:3}
+        initial-interval: ${APP_RABBIT_TEMPLATE_RETRY_INITIAL_INTERVAL:1s}
+        multiplier: ${APP_RABBIT_TEMPLATE_RETRY_MULTIPLIER:2.0}
+        max-interval: ${APP_RABBIT_TEMPLATE_RETRY_MAX_INTERVAL:10s}
+
+app:
+  outbox:
+    publisher:
+      enabled: ${APP_OUTBOX_PUBLISHER_ENABLED:true}
+      initial-delay-ms: ${APP_OUTBOX_PUBLISHER_INITIAL_DELAY_MS:2000}
+      fixed-delay-ms: ${APP_OUTBOX_PUBLISHER_FIXED_DELAY_MS:500}
+      batch-size: ${APP_OUTBOX_PUBLISHER_BATCH_SIZE:100}
+      confirm-timeout-ms: ${APP_OUTBOX_PUBLISHER_CONFIRM_TIMEOUT_MS:5000}
+      worker-id: ${APP_OUTBOX_PUBLISHER_WORKER_ID:${HOSTNAME:servico-lancamentos}}
+      claim-timeout-ms: ${APP_OUTBOX_PUBLISHER_CLAIM_TIMEOUT_MS:30000}
+      retry:
+        initial-interval-ms: ${APP_OUTBOX_PUBLISHER_RETRY_INITIAL_INTERVAL_MS:1000}
+        multiplier: ${APP_OUTBOX_PUBLISHER_RETRY_MULTIPLIER:2.0}
+        max-interval-ms: ${APP_OUTBOX_PUBLISHER_RETRY_MAX_INTERVAL_MS:60000}
+  mensageria:
+    exchange: lancamentos.exchange
+    routing-key: lancamento.registrado
+    fila: lancamento.registrado.fila
+    dead-letter-exchange: lancamentos.dlx
+    dead-letter-routing-key: lancamento.registrado.dlq
+    dead-letter-fila: lancamento.registrado.dlq
+    retry:
+      max-attempts: ${APP_MENSAGERIA_RETRY_MAX_ATTEMPTS:3}
+      initial-interval-ms: ${APP_MENSAGERIA_RETRY_INITIAL_INTERVAL_MS:1000}
+      multiplier: ${APP_MENSAGERIA_RETRY_MULTIPLIER:2.0}
+      max-interval-ms: ${APP_MENSAGERIA_RETRY_MAX_INTERVAL_MS:10000}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState,db,rabbit
+        liveness:
+          include: livenessState
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    br.com.exemplo.lancamentos: ${LOG_LEVEL_APP:INFO}
+    org.springframework.amqp: ${LOG_LEVEL_AMQP:WARN}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} level=%5p service=${spring.application.name} thread=%t logger=%logger{36} msg=%m%n"

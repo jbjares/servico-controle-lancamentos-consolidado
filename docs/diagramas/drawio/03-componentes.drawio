@@ -16,7 +16,7 @@
         <mxCell id="lr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Repository" vertex="1">
           <mxGeometry height="60" width="110" x="380" y="130" as="geometry" />
         </mxCell>
-        <mxCell id="lp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="PublicadorEvento" vertex="1">
+        <mxCell id="lp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="OutboxPublisher" vertex="1">
           <mxGeometry height="60" width="150" x="210" y="300" as="geometry" />
         </mxCell>
         <mxCell id="ce1" edge="1" parent="1" source="lc" style="endArrow=block;html=1;rounded=0;strokeWidth=2;" target="ls" value="">

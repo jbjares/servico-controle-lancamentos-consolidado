@@ -17,9 +17,28 @@ classDiagram
         +Timestamp ultimaAtualizacao
     }
 
+    class OutboxEvent {
+        +UUID idEvento
+        +String tipoEvento
+        +String correlationId
+        +String exchangeName
+        +String routingKey
+        +String payload
+        +OutboxStatus status
+        +Integer tentativas
+        +Timestamp proximaTentativaEm
+        +Timestamp publicadoEm
+        +String processandoPor
+        +Timestamp claimExpiraEm
+    }
+
     class EventoProcessado {
         +UUID idEvento
         +String correlationId
         +Timestamp processadoEm
     }
+
+    Lancamento --> OutboxEvent : gera
+    OutboxEvent --> ConsolidadoDiario : evento publicado atualiza
+    ConsolidadoDiario --> EventoProcessado : registra idempotencia
 ```

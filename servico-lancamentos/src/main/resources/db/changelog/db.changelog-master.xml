@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="1-criar-schema-lancamentos" author="chatgpt">
+        <sql>CREATE SCHEMA IF NOT EXISTS ${schemaName};</sql>
+    </changeSet>
+
+    <changeSet id="2-criar-tabela-lancamento" author="chatgpt">
+        <createTable schemaName="${schemaName}" tableName="lancamento">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tipo" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valor" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_efetiva" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="descricao" type="VARCHAR(255)"/>
+            <column name="criado_em" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3-indice-lancamento-data" author="chatgpt">
+        <createIndex schemaName="${schemaName}" tableName="lancamento" indexName="idx_lancamento_data_efetiva">
+            <column name="data_efetiva"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="4-criar-tabela-outbox-evento" author="chatgpt">
+        <createTable schemaName="${schemaName}" tableName="outbox_evento">
+            <column name="id_evento" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tipo_evento" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="correlation_id" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exchange_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="routing_key" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tentativas" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="proxima_tentativa_em" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criado_em" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizado_em" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="publicado_em" type="TIMESTAMP"/>
+            <column name="ultimo_erro" type="VARCHAR(1000)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5-indice-outbox-status-proxima-tentativa" author="chatgpt">
+        <createIndex schemaName="${schemaName}" tableName="outbox_evento" indexName="idx_outbox_status_proxima_tentativa">
+            <column name="status"/>
+            <column name="proxima_tentativa_em"/>
+            <column name="criado_em"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="6-outbox-lease-publicacao" author="chatgpt">
+        <addColumn schemaName="${schemaName}" tableName="outbox_evento">
+            <column name="processando_por" type="VARCHAR(120)"/>
+            <column name="processando_em" type="TIMESTAMP"/>
+            <column name="claim_expira_em" type="TIMESTAMP"/>
+        </addColumn>
+        <createIndex schemaName="${schemaName}" tableName="outbox_evento" indexName="idx_outbox_claim_expira">
+            <column name="status"/>
+            <column name="claim_expira_em"/>
+            <column name="criado_em"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

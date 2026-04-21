@@ -9,7 +9,8 @@ flowchart LR
     U -->|POST /lancamentos| L
     U -->|GET /consolidados| C
     L -->|Grava lançamento| DB
-    L -->|Publica evento| MQ
+    L -->|Grava evento no Outbox| DB
+    L -->|Publica Outbox com confirm| MQ
     MQ -->|Entrega evento| C
     C -->|Atualiza consolidado| DB
 ```

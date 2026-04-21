@@ -10,8 +10,11 @@ sequenceDiagram
 
     Cliente->>Lancamentos: POST /lancamentos
     Lancamentos->>SchemaLanc: Persistir lançamento
+    Lancamentos->>SchemaLanc: Registrar evento Outbox PENDENTE
     Lancamentos-->>Cliente: 201 Created
-    Lancamentos->>MQ: Publicar evento
+    Lancamentos->>SchemaLanc: Reservar evento PROCESSANDO
+    Lancamentos->>MQ: Publicar evento com publisher confirm
+    Lancamentos->>SchemaLanc: Marcar evento PUBLICADO
     MQ->>Consolidado: Entregar evento
     Consolidado->>EventosProc: Verificar idEvento
     alt Evento já processado
