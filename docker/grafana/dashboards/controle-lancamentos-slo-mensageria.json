@@ -465,10 +465,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
       "gridPos": {
         "h": 9,
         "w": 24,
@@ -477,23 +473,16 @@
       },
       "id": 13,
       "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Logs centralizados via Loki ficam disponiveis no profile full-ops. No profile observability, este dashboard permanece funcional com metricas Prometheus de aplicacao, Outbox, RabbitMQ e SLO sem depender do Loki.",
+        "mode": "markdown"
       },
-      "targets": [
-        {
-          "expr": "{service=~\"servico-lancamentos.*|servico-consolidado-diario.*\"} |~ \"(?i)(error|exception|falha|warn)\"",
-          "refId": "A"
-        }
-      ],
       "title": "Logs de erro/warning por replica",
-      "type": "logs"
+      "type": "text"
     }
   ],
   "refresh": "10s",

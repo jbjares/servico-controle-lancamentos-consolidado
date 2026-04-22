@@ -6,6 +6,16 @@ Este documento descreve a estratégia recomendada para atender aos critérios de
 
 Proteger os dados e serviços contra acessos indevidos, vazamento de informações, abuso de APIs e falhas operacionais comuns, mantendo a solução simples de executar localmente.
 
+## Status nesta entrega
+
+A segurança de autenticação e autorização foi mantida como **decisão arquitetural documentada** e **débito técnico planejado para a próxima sprint**.
+
+Os endpoints de negócio da POC ainda não aplicam validação runtime de token JWT. A decisão foi intencional: como autenticação/autorização não é requisito obrigatório do desafio, a entrega prioriza o fluxo financeiro, a resiliência entre serviços, Outbox, testes, observabilidade e execução local simples.
+
+A arquitetura alvo, entretanto, está definida: as APIs devem ser protegidas com token JWT do tipo Bearer, emitido pelo Keycloak, validado pelas aplicações Spring Boot e autorizado por escopos/papéis de negócio.
+
+Neste contexto, **Keycloak** é a ferramenta de IAM/OAuth2/OIDC. O **Realm** é o domínio lógico dentro do Keycloak onde serão cadastrados e administrados os metadados de autenticação e autorização da aplicação, incluindo usuários, clients, roles, groups, scopes, políticas de acesso e chaves de assinatura.
+
 ## Estratégia recomendada para a POC
 
 Para esta etapa, a recomendação é demonstrar segurança em três camadas:
@@ -31,7 +41,33 @@ Para uma POC local, TLS pode ser documentado como requisito de ambiente, pois ce
 
 ## Autenticação
 
-Opções por maturidade:
+### Arquitetura alvo com JWT Bearer e Keycloak
+
+Na próxima sprint, os serviços devem operar como **OAuth2 Resource Servers**. Todo endpoint de negócio exposto pela borda da aplicação deve exigir:
+
+```http
+Authorization: Bearer <access_token_jwt>
+```
+
+O token deve ser obtido no **Realm da aplicação dentro do Keycloak**, por exemplo `controle-lancamentos`, usando fluxos OIDC/OAuth2 compatíveis com o tipo de consumidor:
+
+| Consumidor | Fluxo recomendado | Observação |
+|---|---|---|
+| Usuário humano via UI | Authorization Code com PKCE | Recomendado para aplicações web modernas |
+| Integração sistema-sistema | Client Credentials | Recomendado para automações e integrações internas |
+| Testes locais/Postman/Insomnia | Client Credentials ou usuário técnico | Facilita validação sem expor senha em código |
+
+As aplicações devem validar:
+
+- assinatura do token por chaves públicas do Keycloak via JWKS;
+- `issuer` do Realm esperado;
+- `audience`/cliente esperado;
+- expiração (`exp`) e validade temporal (`nbf`, quando presente);
+- escopos e papéis necessários para a rota chamada.
+
+O acesso seguro deve usar TLS em ambientes reais. As chaves criptográficas de assinatura devem ser gerenciadas pelo Keycloak, com rotação controlada. Caso haja requisito de confidencialidade do conteúdo do token, a evolução pode considerar JWE; para a maior parte dos cenários de API, JWT assinado via JWS, trafegando por TLS, é suficiente e mais simples de operar.
+
+### Opções por maturidade
 
 | Opção | Uso recomendado | Justificativa |
 |---|---|---|
@@ -39,15 +75,18 @@ Opções por maturidade:
 | Basic Auth no Nginx | Proteção local rápida | Útil para RabbitMQ/Grafana, não ideal para APIs corporativas |
 | OAuth2/OIDC com JWT | Produção | Integra com Keycloak, Azure AD, Okta ou outro IdP corporativo |
 
-Recomendação para evolução curta da POC:
+Recomendação para a próxima sprint:
 
-- implementar API Key obrigatória nas rotas de negócio;
+- adicionar Spring Security OAuth2 Resource Server nos dois serviços;
+- criar o Realm da aplicação no Keycloak, com users, clients, roles, groups e scopes;
+- versionar configuração base do Realm para execução local opcional;
+- atualizar Postman/Insomnia para obter token e chamar as APIs com Bearer Token;
 - manter Actuator exposto apenas com endpoints mínimos;
-- deixar OAuth2/OIDC documentado como evolução produtiva.
+- manter Keycloak fora do core obrigatório do Docker Compose, preferencialmente em profile dedicado de segurança.
 
 Recomendação para produção:
 
-- OAuth2/OIDC com JWT;
+- OAuth2/OIDC com JWT Bearer;
 - escopos como `lancamentos:write`, `lancamentos:read` e `consolidados:read`;
 - validação de issuer, audience, expiração e assinatura;
 - rotação de chaves via JWKS.
@@ -61,6 +100,15 @@ Papéis sugeridos:
 | `OPERADOR_CAIXA` | Registrar lançamentos e consultar lançamentos |
 | `GESTOR_FINANCEIRO` | Consultar consolidado diário e relatórios |
 | `ADMIN_OPERACIONAL` | Consultar health, métricas e dashboards operacionais |
+
+Escopos sugeridos:
+
+| Escopo | Endpoints |
+|---|---|
+| `lancamentos:write` | `POST /api/lancamentos` |
+| `lancamentos:read` | `GET /api/lancamentos` |
+| `consolidados:read` | `GET /api/consolidados/{data}` |
+| `ops:read` | Endpoints operacionais restritos |
 
 ## Proteção contra abuso
 
@@ -116,10 +164,10 @@ Em produção, recomenda-se restringir Actuator por rede, autenticação ou API 
 
 Para equilibrar clareza e segurança, a solução deve:
 
-- documentar OAuth2/OIDC como arquitetura alvo;
-- implementar ou preparar API Key como proteção simples de POC;
+- documentar OAuth2/OIDC com JWT Bearer e Keycloak como arquitetura alvo;
+- registrar a implementação de autenticação/autorização como débito técnico da próxima sprint;
 - manter Nginx como camada de entrada;
 - usar rate limiting e headers de segurança no Nginx;
-- não adicionar Keycloak por padrão para não aumentar excessivamente a infraestrutura local.
+- não adicionar Keycloak por padrão no core da POC para não aumentar excessivamente a infraestrutura local.
 
 Essa decisão demonstra maturidade arquitetural: o desenho reconhece o caminho produtivo, mas preserva a simplicidade necessária para avaliação local.
