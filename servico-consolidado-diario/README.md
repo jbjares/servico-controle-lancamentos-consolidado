@@ -20,6 +20,16 @@ Responsável por consumir eventos de lançamentos, consolidar os valores por dat
 | `GET` | `/actuator/health/liveness` | Liveness |
 | `GET` | `/actuator/prometheus` | Métricas Prometheus |
 
+## Segurança
+
+Autenticação/autorização ainda não está ativa neste serviço durante a POC. A arquitetura alvo prevê proteção dos endpoints de negócio com JWT Bearer emitido pelo Keycloak a partir do Realm da aplicação, onde serão cadastrados usuários, clients, roles, groups, scopes e metadados de autenticação/autorização.
+
+Escopo previsto:
+
+- `consolidados:read` para consulta do consolidado diário.
+
+Essa implementação está registrada como débito técnico da próxima sprint.
+
 ## Resposta de consulta
 
 ```json

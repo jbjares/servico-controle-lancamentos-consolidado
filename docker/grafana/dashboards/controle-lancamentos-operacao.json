@@ -123,10 +123,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
       "gridPos": {
         "h": 10,
         "w": 24,
@@ -135,23 +131,16 @@
       },
       "id": 4,
       "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Logs centralizados e alertas baseados em Loki ficam disponiveis no profile full-ops. No profile observability, use os logs via docker compose logs e os dashboards Prometheus para validar aplicacao, filas, Outbox e SLO.",
+        "mode": "markdown"
       },
-      "targets": [
-        {
-          "expr": "{service=~\"servico-lancamentos.*|servico-consolidado-diario.*|nginx\"} |~ \"(?i)(error|exception|falha|warn)\"",
-          "refId": "A"
-        }
-      ],
       "title": "Logs de erro/warning",
-      "type": "logs"
+      "type": "text"
     }
   ],
   "refresh": "10s",

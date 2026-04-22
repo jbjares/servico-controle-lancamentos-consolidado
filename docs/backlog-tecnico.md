@@ -21,20 +21,23 @@ Este backlog separa o que já foi implementado, o que é recomendado como próxi
 - k6 para validação de 50 req/s e perda máxima de 5%.
 - JMeter opcional para carga, stress e performance.
 - CI com Maven tests, compose smoke, resiliência e k6.
+- Arquitetura alvo de segurança documentada com JWT Bearer, Keycloak, roles e scopes.
 
 ## Próximos passos recomendados
 
-1. Implementar API Key para rotas de negócio.
-2. Adicionar rate limiting e headers de segurança no Nginx.
-3. Criar uma UI web simples para registrar lançamentos e consultar consolidado diário.
-4. Adicionar coleção Postman/Insomnia versionada no repositório.
-5. Adicionar teste JMeter em workflow manual, se o tempo de execução for aceitável.
-6. Evoluir dashboards com painéis específicos por rota e percentis p95/p99.
-7. Criar alertas de Outbox com thresholds ajustáveis por ambiente.
+1. Implementar autenticação/autorização com Spring Security OAuth2 Resource Server.
+2. Criar o Realm da aplicação no Keycloak com users, clients, roles, groups, scopes e metadados de autenticação/autorização.
+3. Adicionar profile opcional `security` no Docker Compose com Keycloak.
+4. Adicionar rate limiting e headers de segurança no Nginx.
+5. Criar uma UI web simples para registrar lançamentos e consultar consolidado diário.
+6. Adicionar coleção Postman/Insomnia versionada com obtenção de token Bearer.
+7. Adicionar teste JMeter em workflow manual, se o tempo de execução for aceitável.
+8. Evoluir dashboards com painéis específicos por rota e percentis p95/p99.
+9. Criar alertas de Outbox com thresholds ajustáveis por ambiente.
 
 ## Evoluções produtivas
 
-- OAuth2/OIDC com JWT, integrado a Keycloak, Azure AD, Okta ou IdP corporativo.
+- OAuth2/OIDC com JWT Bearer, integrado a Keycloak, Azure AD, Okta ou IdP corporativo.
 - TLS externo e, se necessário, TLS interno entre serviços.
 - Secret manager para senhas, tokens e chaves.
 - Banco por serviço ou instância segregada, se houver exigência forte de isolamento.
@@ -46,7 +49,7 @@ Este backlog separa o que já foi implementado, o que é recomendado como próxi
 
 ## Itens deliberadamente fora do core
 
-- Keycloak local por padrão.
+- Keycloak local por padrão no core da POC.
 - Kafka.
 - Redis/cache.
 - Service mesh.
