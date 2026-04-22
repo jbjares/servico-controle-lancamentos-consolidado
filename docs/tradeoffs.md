@@ -15,7 +15,7 @@ Este documento registra as principais decisões arquiteturais, alternativas cons
 | Docker Compose profiles | Subir toda a infra sempre | Permite POC enxuta e operação completa opcional | Mais documentação | `core`, `observability`, `full-ops` | Evita overengineering no caminho padrão |
 | k6 no CI | JMeter como teste principal | Execução leve, scriptável e adequada a CI | Menos familiar para alguns times QA | k6 automatizado | Valida 50 req/s e perda máxima de 5% de forma objetiva |
 | JMeter opcional | Apenas k6 | Evidência tradicional de performance | Mais ferramenta para manter | JMeter em `tests/load/jmeter` | Útil para execução local e análise `.jtl`, sem pesar no CI |
-| Segurança por evolução incremental | Keycloak/OIDC completo no compose | POC simples e avaliável | OAuth2 real fica documentado como arquitetura alvo | API Key/rate limit como próximo passo, OAuth2/OIDC como alvo | Evita transformar a POC em plataforma de IAM |
+| Segurança por evolução incremental | Keycloak/OIDC completo no compose | POC simples e avaliável | OAuth2 real fica documentado como arquitetura alvo | JWT Bearer com Keycloak como próxima sprint, rate limit na borda | Evita transformar a POC em plataforma de IAM |
 
 ## Observabilidade
 
@@ -33,10 +33,15 @@ O endpoint `POST /api/lancamentos` retorna após persistir o lançamento e regis
 
 ## Segurança
 
-OAuth2/OIDC com JWT é a arquitetura alvo recomendada para produção. Para a POC, a evolução mais proporcional é:
+OAuth2/OIDC com JWT Bearer é a arquitetura alvo recomendada para produção. A POC documenta essa decisão como débito técnico da próxima sprint, mantendo a execução local enxuta.
+
+Na evolução planejada:
 
 - headers de segurança e rate limiting no Nginx;
-- API Key para rotas de negócio;
+- Spring Security OAuth2 Resource Server nos dois serviços;
+- tokens emitidos pelo Keycloak a partir do Realm da aplicação;
+- Realm concentrando usuários, clients, roles, groups, scopes e metadados de autenticação/autorização;
+- validação de assinatura via JWKS, issuer, audience, expiração e escopos;
 - Actuator restrito ao mínimo necessário;
 - secrets fora do código em ambientes reais.
 

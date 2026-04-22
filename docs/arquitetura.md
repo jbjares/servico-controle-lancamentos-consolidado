@@ -12,6 +12,49 @@ Essa abordagem visa evidenciar capacidade de priorização, tomada de decisão, 
 
 ---
 
+## Leitura Recomendada
+
+Este é o documento arquitetural principal e canônico da solução. Os demais arquivos complementam tópicos específicos:
+
+| Documento | Finalidade |
+|---|---|
+| [`modelo-dominio.md`](modelo-dominio.md) | Entidades, eventos e regras de domínio |
+| [`modelo-dados.md`](modelo-dados.md) | Schemas, tabelas, colunas e consultas úteis |
+| [`tradeoffs.md`](tradeoffs.md) | Decisões arquiteturais e alternativas consideradas |
+| [`seguranca.md`](seguranca.md) | Estratégia de segurança para POC e produção |
+| [`execucao-testes.md`](execucao-testes.md) | Execução local, Postman, Insomnia, Maven, k6 e JMeter |
+| [`backlog-tecnico.md`](backlog-tecnico.md) | Itens implementados, próximos passos e evolução produtiva |
+| [`roteiro-apresentacao.md`](roteiro-apresentacao.md) | Roteiro sugerido para apresentação do desafio |
+
+## Resumo Executivo
+
+A solução é composta por dois serviços Spring Boot:
+
+- `servico-lancamentos`
+- `servico-consolidado-diario`
+
+O `servico-lancamentos` recebe lançamentos de crédito e débito, persiste no schema `lancamentos` e registra o evento correspondente na tabela `outbox_evento` dentro da mesma transação. O publisher do Outbox publica o evento no RabbitMQ de forma assíncrona.
+
+O `servico-consolidado-diario` consome os eventos de lançamentos, atualiza o schema `consolidado` e registra cada evento processado para garantir idempotência.
+
+Esse desenho atende ao requisito não funcional principal: o serviço de controle de lançamentos permanece disponível mesmo quando o consolidado diário está indisponível.
+
+Principais capacidades demonstradas:
+
+- múltiplas réplicas dos serviços;
+- Nginx como load balancer;
+- Docker Compose profiles `core`, `observability` e `full-ops`;
+- Outbox Pattern implementado no `servico-lancamentos`;
+- publisher com status `PROCESSANDO`, lease e publisher confirm;
+- RabbitMQ com retry e DLQ;
+- idempotência no `servico-consolidado-diario` via `evento_processado`;
+- métricas com Actuator/Prometheus;
+- dashboards Grafana;
+- testes unitários, integração, k6 e JMeter;
+- estratégia de segurança documentada com JWT Bearer, Keycloak e Realm da aplicação como débito técnico da próxima sprint.
+
+---
+
 ## 2. Contexto de Negócio
 
 Um comerciante necessita registrar lançamentos financeiros (débitos e créditos) e consultar o saldo diário consolidado.
@@ -65,7 +108,7 @@ A solução deve garantir:
 - **Disponibilidade:** o serviço de lançamentos não deve depender da disponibilidade imediata do consolidado
 - **Resiliência:** falhas parciais não devem interromper o fluxo principal
 - **Escalabilidade:** arquitetura preparada para crescimento independente entre escrita e consolidação
-- **Segurança:** capacidade de evolução para autenticação e autorização robustas
+- **Segurança:** arquitetura alvo documentada para autenticação e autorização com JWT Bearer e Keycloak
 - **Observabilidade:** capacidade de evoluir para métricas, logs estruturados e monitoramento
 - **Testabilidade:** arquitetura simples de validar com testes unitários e integração
 - **Manutenibilidade:** organização clara de módulos, diretórios e versionamento de banco
@@ -97,6 +140,25 @@ A solução demonstra resiliência básica ao impedir que falhas no serviço de 
 Eu não descartei totalmente o monólito como opção técnica viável para cenários menores, mas, neste caso específico, considerei que a exigência de independência operacional entre lançamentos e consolidado tornava mais adequado um desenho desacoplado por serviços.
 
 Embora versões mais recentes do Java ofereçam melhorias importantes de linguagem, desempenho e produtividade, optou-se por Java 11 com Spring Boot 2.7.x nesta prova de conceito em função da estabilidade do ecossistema, ampla maturidade das bibliotecas, compatibilidade consolidada e menor risco de implementação dentro do tempo disponível. Para o escopo da solução, os requisitos funcionais e não funcionais propostos podem ser plenamente atendidos com esse stack, sem prejuízo arquitetural.
+
+---
+
+### 5.4 Segurança da Arquitetura Alvo
+
+Autenticação e autorização não foram implementadas como validação runtime nesta POC, pois não fazem parte dos requisitos obrigatórios mínimos e adicionariam uma camada de IAM que poderia reduzir a simplicidade de avaliação local.
+
+Mesmo assim, a arquitetura alvo está definida para evolução na próxima sprint:
+
+- os endpoints de negócio devem exigir token JWT do tipo Bearer;
+- os tokens devem ser emitidos pelo Keycloak a partir do Realm da aplicação;
+- os serviços Spring Boot devem atuar como OAuth2 Resource Servers;
+- a validação deve considerar assinatura via JWKS, issuer, audience, expiração e escopos;
+- as permissões devem ser expressas por roles e scopes como `lancamentos:write`, `lancamentos:read` e `consolidados:read`;
+- o Realm deve concentrar usuários, clients, roles, groups, scopes e demais metadados de autenticação/autorização;
+- o tráfego externo em produção deve ocorrer sobre TLS;
+- segredos, clients e chaves devem ser administrados pelo Keycloak e por secret manager/variáveis seguras de ambiente.
+
+Essa decisão mantém o desenho corporativo explícito, sem transformar a POC em uma instalação completa de IAM. O detalhe técnico está documentado em [`seguranca.md`](seguranca.md) e registrado no backlog da próxima sprint.
 
 ---
 
@@ -333,6 +395,9 @@ servico-controle-lancamentos-consolidado/
 │   ├── backlog-tecnico.md
 │   ├── modelo-dominio.md
 │   ├── modelo-dados.md
+│   ├── seguranca.md
+│   ├── execucao-testes.md
+│   ├── roteiro-apresentacao.md
 │   └── diagramas/
 │       ├── drawio/
 │       │   ├── 01-overview-big-picture.drawio
@@ -573,7 +638,7 @@ DLQ significa **Dead Letter Queue**. É uma fila destinada a mensagens que falha
 Retry é a estratégia de tentar novamente o processamento de uma mensagem ou chamada que falhou por motivo transitório. Pode ser usado com backoff progressivo para evitar tempestade de reprocessamento.
 
 #### OAuth2
-OAuth2 é um protocolo de autorização amplamente utilizado para delegação segura de acesso via tokens. Pode ser aplicado para proteger APIs externas, controlar escopos de acesso e integrar com provedores corporativos de identidade.
+OAuth2 é um protocolo de autorização amplamente utilizado para delegação segura de acesso via tokens. Na arquitetura alvo desta solução, o Keycloak será a ferramenta de IAM/OAuth2/OIDC, e o Realm da aplicação será o local de cadastro dos usuários, clients, roles, groups, scopes e metadados de autenticação/autorização. Os endpoints de negócio serão protegidos com JWT Bearer emitido pelo Keycloak, e os serviços validarão assinatura por JWKS, issuer, audience, expiração e escopos antes de autorizar a operação.
 
 ### 14.2 Média Prioridade
 
@@ -652,6 +717,166 @@ docker compose --profile full-ops up --build
 Sobe a stack completa com Loki, Promtail, Alertmanager e exporters.
 
 O passo a passo operacional detalhado está em [`execucao-testes.md`](execucao-testes.md).
+
+### 16.4 Passo a Passo Docker Completo
+
+Esta seção consolida a execução completa da solução, incluindo todos os módulos, serviços e ferramentas.
+
+#### 1. Entrar no diretório do projeto
+
+No Ubuntu/WSL:
+
+```bash
+cd /home/jbjares/workspaces/carrefour/servico-controle-lancamentos-consolidado
+```
+
+#### 2. Validar o Docker Compose
+
+```bash
+docker compose --profile full-ops config
+```
+
+Esse comando valida o compose com todos os módulos funcionais e operacionais.
+
+#### 3. Subir todos os módulos e ferramentas
+
+```bash
+docker compose --profile full-ops up --build -d
+```
+
+Esse modo sobe:
+
+| Componente | Finalidade |
+|---|---|
+| `postgres` | Banco PostgreSQL da solução |
+| `rabbitmq` | Broker de mensageria, management UI e métricas Prometheus |
+| `servico-lancamentos-a` | Réplica A do serviço de lançamentos |
+| `servico-lancamentos-b` | Réplica B do serviço de lançamentos |
+| `servico-consolidado-diario-a` | Réplica A do serviço de consolidado diário |
+| `servico-consolidado-diario-b` | Réplica B do serviço de consolidado diário |
+| `nginx` | Load balancer e ponto único de entrada da API |
+| `prometheus-full-ops` | Coleta de métricas da aplicação, RabbitMQ, Nginx e infraestrutura |
+| `grafana-full-ops` | Dashboards visuais |
+| `alertmanager` | Gerenciamento local de alertas |
+| `loki` | Consolidação de logs |
+| `promtail` | Coleta de logs dos containers Docker |
+| `cadvisor` | Métricas de containers |
+| `node-exporter` | Métricas do host/WSL |
+| `nginx-exporter` | Métricas do Nginx |
+
+#### 4. Aguardar readiness
+
+```bash
+./tests/ci/wait-url.sh \
+  http://localhost:8080/health \
+  http://localhost:8081/actuator/health/readiness \
+  http://localhost:8084/actuator/health/readiness \
+  http://localhost:8082/actuator/health/readiness \
+  http://localhost:8085/actuator/health/readiness \
+  http://localhost:9090/-/ready \
+  http://localhost:9093/-/ready \
+  http://localhost:3000/api/health \
+  http://localhost:3100/ready \
+  http://localhost:9080/metrics \
+  http://localhost:9113/metrics \
+  http://localhost:8083/metrics \
+  http://localhost:9100/metrics \
+  http://localhost:15692/metrics
+```
+
+#### 5. Verificar containers
+
+```bash
+docker compose --profile full-ops ps
+```
+
+#### 6. Acessar URLs principais
+
+| Recurso | URL | Credenciais |
+|---|---|---|
+| API via Nginx | `http://localhost:8080` | - |
+| Health do load balancer | `http://localhost:8080/health` | - |
+| Lançamentos réplica A | `http://localhost:8081` | - |
+| Lançamentos réplica B | `http://localhost:8084` | - |
+| Consolidado réplica A | `http://localhost:8082` | - |
+| Consolidado réplica B | `http://localhost:8085` | - |
+| RabbitMQ Management | `http://localhost:15672` | `guest` / `guest` |
+| RabbitMQ Metrics | `http://localhost:15692/metrics` | - |
+| Prometheus | `http://localhost:9090` | - |
+| Alertmanager | `http://localhost:9093` | - |
+| Grafana | `http://localhost:3000` | `admin` / `admin` |
+| Loki | `http://localhost:3100` | - |
+| Promtail Metrics | `http://localhost:9080/metrics` | - |
+| Nginx Exporter | `http://localhost:9113/metrics` | - |
+| cAdvisor | `http://localhost:8083` | - |
+| Node Exporter | `http://localhost:9100/metrics` | - |
+| PostgreSQL | `localhost:5432` | `app` / `app` |
+
+#### 7. Validar fluxo funcional
+
+```bash
+curl -i -X POST http://localhost:8080/api/lancamentos \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "tipo": "CREDITO",
+    "valor": 100.50,
+    "dataEfetiva": "2026-04-21",
+    "descricao": "Teste full-ops"
+  }'
+```
+
+```bash
+curl -sS 'http://localhost:8080/api/lancamentos?dataInicio=2026-04-21&dataFim=2026-04-21'
+```
+
+```bash
+curl -i http://localhost:8080/api/consolidados/2026-04-21
+```
+
+Como a consolidação é assíncrona, uma primeira consulta ao consolidado pode retornar `404`. Aguarde alguns segundos e consulte novamente.
+
+#### 8. Validar filas RabbitMQ
+
+```bash
+docker exec rabbitmq-controle-financeiro rabbitmqctl list_queues name messages_ready messages_unacknowledged consumers
+```
+
+Resultado esperado em operação normal:
+
+- fila principal sem backlog persistente;
+- DLQ vazia;
+- consumidores ativos na fila principal.
+
+#### 9. Validar Prometheus e dashboards
+
+```bash
+curl -sS 'http://localhost:9090/api/v1/targets?state=active'
+```
+
+```bash
+curl -sS -u admin:admin 'http://localhost:3000/api/search?query=Controle%20Lancamentos'
+```
+
+Dashboards esperados:
+
+- `Controle Lancamentos`
+- `Controle Lancamentos - Operacao`
+- `Controle Lancamentos - SLO e Mensageria`
+- `Controle Lancamentos - Spring Boot`
+
+#### 10. Encerrar todos os módulos
+
+```bash
+docker compose --profile full-ops down --remove-orphans
+```
+
+Para remover volumes locais:
+
+```bash
+docker compose --profile full-ops down -v --remove-orphans
+```
+
+Use `-v` apenas quando desejar apagar dados locais de banco, métricas e dashboards.
 
 O modo core deve:
 

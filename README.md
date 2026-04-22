@@ -332,6 +332,18 @@ docker run --rm --network host \
   -JTEST_RUN_ID=jmeter-local-$(date +%Y%m%d%H%M%S)
 ```
 
+## Segurança
+
+A proteção de autenticação e autorização dos endpoints está documentada como arquitetura alvo e débito técnico da próxima sprint.
+
+O desenho recomendado usa OAuth2/OIDC com token JWT do tipo Bearer, emitido pelo Keycloak a partir do Realm da aplicação. O Keycloak é a ferramenta de IAM/OAuth2/OIDC, e o Realm é o domínio lógico onde serão cadastrados usuários, clients, roles, groups, scopes e demais metadados de autenticação/autorização. Os serviços Spring Boot devem atuar como Resource Servers, validando assinatura por JWKS, `issuer`, `audience`, expiração e escopos antes de autorizar operações como:
+
+- `lancamentos:write` para `POST /api/lancamentos`;
+- `lancamentos:read` para `GET /api/lancamentos`;
+- `consolidados:read` para `GET /api/consolidados/{data}`.
+
+Nesta POC, essa validação ainda não está ativa nos endpoints para preservar simplicidade de execução local. A decisão e o plano de evolução estão detalhados em [Segurança](docs/seguranca.md), [Arquitetura](docs/arquitetura.md) e [Backlog técnico](docs/backlog-tecnico.md).
+
 ## Estrutura
 
 ```text
@@ -347,7 +359,6 @@ servico-controle-lancamentos-consolidado/
 
 ## Documentação
 
-- [Documento de Arquitetura](docs/documento-arquitetura.md)
 - [Arquitetura](docs/arquitetura.md)
 - [Execução e Testes](docs/execucao-testes.md)
 - [Trade-offs](docs/tradeoffs.md)
@@ -355,6 +366,7 @@ servico-controle-lancamentos-consolidado/
 - [Modelo de domínio](docs/modelo-dominio.md)
 - [Modelo de dados](docs/modelo-dados.md)
 - [Segurança](docs/seguranca.md)
+- [Roteiro de apresentação](docs/roteiro-apresentacao.md)
 
 ## Observações
 

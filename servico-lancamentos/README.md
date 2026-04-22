@@ -23,6 +23,17 @@ Responsável por receber, validar, persistir e registrar eventos de lançamentos
 | `GET` | `/actuator/health/liveness` | Liveness |
 | `GET` | `/actuator/prometheus` | Métricas Prometheus |
 
+## Segurança
+
+Autenticação/autorização ainda não está ativa neste serviço durante a POC. A arquitetura alvo prevê proteção dos endpoints de negócio com JWT Bearer emitido pelo Keycloak a partir do Realm da aplicação, onde serão cadastrados usuários, clients, roles, groups, scopes e metadados de autenticação/autorização.
+
+Escopos previstos:
+
+- `lancamentos:write` para criação de lançamentos;
+- `lancamentos:read` para consulta de lançamentos.
+
+Essa implementação está registrada como débito técnico da próxima sprint.
+
 ## Payload de criação
 
 ```json

@@ -113,6 +113,18 @@ Credenciais locais:
 - Grafana: `admin` / `admin`
 - PostgreSQL: database `controle_financeiro`, usuário `app`, senha `app`
 
+## Autenticação e autorização
+
+Nesta POC, os comandos de teste abaixo ainda não exigem token Bearer. A autenticação/autorização foi documentada como arquitetura alvo e débito técnico da próxima sprint.
+
+Quando essa evolução for implementada, os testes por linha de comando, Postman e Insomnia devem obter um token JWT no Keycloak a partir do Realm da aplicação e enviar:
+
+```http
+Authorization: Bearer <access_token_jwt>
+```
+
+Os escopos previstos são `lancamentos:write`, `lancamentos:read` e `consolidados:read`.
+
 ## Testes por linha de comando
 
 ### Registrar lançamento
