@@ -1,4 +1,4 @@
-# Documento de Arquitetura – Serviço de Controle de Lançamentos e Consolidado Diário
+# Documento Consolidado de Arquitetura Alvo – Serviço de Controle de Lançamentos e Consolidado Diário
 
 ## 1. Introdução
 
@@ -12,9 +12,27 @@ Essa abordagem visa evidenciar capacidade de priorização, tomada de decisão, 
 
 ---
 
-## Leitura Recomendada
+## Atendimento Explícito ao Requisito Obrigatório
 
-Este é o documento arquitetural principal e canônico da solução. Os demais arquivos complementam tópicos específicos:
+Este arquivo foi consolidado para atender de forma direta o item obrigatório **"Desenho da solução completo (Arquitetura Alvo)"**. Mesmo existindo documentos de apoio na pasta `docs`, este documento é autossuficiente para leitura pelo avaliador e cobre, sozinho, os principais artefatos exigidos pelo desafio.
+
+| Item obrigatório | Onde está coberto neste documento |
+|---|---|
+| Mapeamento de domínios funcionais e capacidades de negócio | Seções 3 e 6 |
+| Refinamento do levantamento de requisitos funcionais e não funcionais | Seção 4 |
+| Desenho da solução completo (Arquitetura Alvo) | Seções 5, 8, 9, 11, 12 e 16 |
+| Justificativa da escolha de ferramentas, tecnologias e tipo de arquitetura | Seções 5.3, 13 e 14 |
+| Testes | Seção 15 |
+| README com instruções claras e como rodar localmente | Seção 16 |
+| Organização do repositório público | Seções 11 e 17 |
+
+O stack implementado nesta POC usa **Java 11 + Spring Boot 2.7.x**, PostgreSQL, RabbitMQ, Nginx, Docker Compose, Actuator, Micrometer/Prometheus, Grafana, k6 e JMeter opcional. A escolha busca equilíbrio entre maturidade do ecossistema, simplicidade de execução local e evidência arquitetural suficiente para o desafio.
+
+---
+
+## Documentos de Apoio
+
+Os arquivos abaixo permanecem no repositório como anexos especializados. Eles aprofundam pontos específicos, mas não são mais necessários para compreender a arquitetura alvo em alto nível:
 
 | Documento | Finalidade |
 |---|---|
@@ -125,9 +143,12 @@ Arquitetura orientada a eventos, com serviços desacoplados e integração assí
 
 - Serviço de Lançamentos
 - Serviço de Consolidado Diário
+- Nginx como borda única e balanceador local
 - RabbitMQ
 - PostgreSQL
 - Liquibase embarcado em cada serviço para versionamento do banco
+- Prometheus e Grafana no profile `observability`
+- Loki, Promtail, Alertmanager e exporters no profile `full-ops`
 
 ### 5.3 Justificativas Principais
 
@@ -457,23 +478,22 @@ Sim, a criação de uma pasta dedicada exclusivamente aos arquivos relacionados 
 ### 12.1 Big Picture / Overview
 
 Arquivo draw.io: [`docs/diagramas/drawio/01-overview-big-picture.drawio`](./diagramas/drawio/01-overview-big-picture.drawio)
+Preview SVG: [`docs/diagramas/svg/01-overview-big-picture.png`](./diagramas/svg/01-overview-big-picture.png)
+Versão Mermaid simplificada: [`docs/diagramas/mermaid/01-overview-big-picture.md`](./diagramas/mermaid/01-overview-big-picture.md)
 
-```mermaid
-flowchart LR
-    U[Usuário / Consumidor]
-    L[Serviço de Lançamentos]
-    C[Serviço de Consolidado Diário]
-    MQ[RabbitMQ]
-    DB[(PostgreSQL)]
+Para leitura por público não técnico, o preview abaixo usa uma versão executiva do desenho, com foco no fluxo principal de negócio e na mensagem arquitetural mais importante do desafio.
 
-    U -->|POST /lancamentos| L
-    U -->|GET /consolidados| C
-    L -->|Grava lançamento| DB
-    L -->|Grava evento no Outbox| DB
-    L -->|Publica Outbox com confirm| MQ
-    MQ -->|Entrega evento| C
-    C -->|Atualiza consolidado| DB
-```
+![Arquitetura Alvo - Visão Executiva](./diagramas/svg/01-overview-big-picture.png)
+
+Leitura recomendada do diagrama:
+
+- o **Nginx** concentra a entrada HTTP e distribui chamadas entre as réplicas;
+- o domínio de **lançamentos** persiste o dado e grava o evento na **Outbox** antes da publicação;
+- o **RabbitMQ** desacopla a escrita do processamento do consolidado, protegendo a disponibilidade do fluxo principal;
+- o domínio de **consolidado diário** consome os eventos e usa **idempotência** para evitar dupla contabilização;
+- o **PostgreSQL** mantém separação lógica por schemas, reduzindo complexidade local sem misturar responsabilidades;
+- **Prometheus/Grafana** entram por profile opcional para observabilidade;
+- **Keycloak + Realm** aparecem como arquitetura alvo documentada para a próxima sprint, sem bloquear a POC atual.
 
 ### 12.2 Domínio
 
@@ -654,20 +674,75 @@ Os itens acima foram deliberadamente postergados por apresentarem maior custo de
 
 ---
 
-## 15. Testes
+## 15. Testes e Evidências Técnicas
 
-### 15.1 Testes Unitários Recomendados
+### 15.1 Estratégia de Testes
 
-- cálculo do saldo consolidado
-- validação de lançamentos inválidos
-- idempotência no consumidor
+A estratégia de testes foi definida para comprovar não apenas o comportamento funcional, mas também os requisitos não funcionais centrais do desafio:
 
-### 15.2 Testes de Integração Recomendados
+- testes unitários para regras de negócio, validação e cálculo;
+- testes de integração com H2 para persistência, APIs e consumo de eventos;
+- smoke tests com Docker Compose para validar a solução integrada;
+- testes de resiliência com indisponibilidade do `servico-consolidado-diario`;
+- testes de carga com k6 para validar a meta de `50 req/s` e perda máxima aceitável;
+- testes de carga e performance com JMeter como ferramenta complementar e opcional.
 
-- cadastro de lançamento com persistência
-- publicação de evento
-- consumo e atualização do consolidado
-- reprocessamento seguro de evento duplicado
+### 15.2 Cobertura Funcional por Serviço
+
+No `servico-lancamentos`, a suíte cobre principalmente:
+
+- validação de payload e regras de entrada;
+- persistência de `Lancamento`;
+- gravação transacional de `OutboxEvent`;
+- publicação assíncrona com retry e confirmação no RabbitMQ;
+- comportamento estável mesmo com o consumidor indisponível.
+
+No `servico-consolidado-diario`, a suíte cobre principalmente:
+
+- consumo do evento `LancamentoRegistrado`;
+- atualização do `ConsolidadoDiario`;
+- idempotência por `idEvento`;
+- descarte seguro de duplicidade;
+- comportamento de reprocessamento controlado.
+
+### 15.3 Evidência dos Requisitos Não Funcionais
+
+O requisito mais crítico do desafio foi validado da seguinte forma:
+
+- **Disponibilidade de lançamentos com consolidado indisponível:** o `servico-lancamentos` continua aceitando `POST /api/lancamentos`, persistindo o lançamento e registrando o evento no Outbox mesmo quando o `servico-consolidado-diario` está parado;
+- **Processamento assíncrono posterior:** após a volta do consumidor, os eventos pendentes são consumidos e o saldo diário é recalculado;
+- **Pico de 50 req/s com perda máxima de 5%:** o cenário automatizado com k6 foi preparado para validar taxa sustentada de `50 req/s`, latência observável e volume de falhas dentro da tolerância do desafio.
+
+Em termos arquiteturais, isso comprova que o fluxo principal de negócio fica protegido por desacoplamento assíncrono, Outbox Pattern, DLQ, retry e idempotência.
+
+### 15.4 Ferramentas e Automação
+
+As ferramentas adotadas foram:
+
+| Ferramenta | Finalidade |
+|---|---|
+| JUnit 5 e Spring Boot Test | testes unitários e de integração |
+| H2 | banco em memória para testes automatizados |
+| Docker Compose | validação integrada da solução |
+| k6 | carga automatizada leve e adequada a CI |
+| JMeter | carga, stress e análise complementar local |
+| GitHub Actions | automação de build, testes e smoke validation |
+
+### 15.5 Critérios de Aceite Cobertos
+
+Os testes foram estruturados para sustentar os seguintes critérios:
+
+- registrar crédito e débito com retorno HTTP adequado;
+- consultar lançamentos por período;
+- consultar o consolidado diário após processamento assíncrono;
+- evitar dupla contabilização em caso de redelivery;
+- manter o serviço de lançamentos disponível quando o consolidado cai;
+- sustentar `50 req/s` com limite máximo de perda definido pelo enunciado;
+- subir a solução localmente com Docker Compose e healthchecks reais.
+
+### 15.6 Onde Executar os Testes
+
+O passo a passo operacional de execução por linha de comando, Postman, Insomnia, Maven, k6 e JMeter permanece detalhado em [`execucao-testes.md`](execucao-testes.md). Este documento arquitetural consolida a estratégia, a motivação e os critérios de validação.
 
 ---
 
