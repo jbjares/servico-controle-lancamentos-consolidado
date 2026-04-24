@@ -359,7 +359,7 @@ servico-controle-lancamentos-consolidado/
 
 ## Documentação
 
-- [Arquitetura](docs/arquitetura.md)
+- [Arquitetura Alvo Consolidada](docs/arquitetura.md)
 - [Execução e Testes](docs/execucao-testes.md)
 - [Trade-offs](docs/tradeoffs.md)
 - [Backlog técnico](docs/backlog-tecnico.md)
@@ -367,6 +367,8 @@ servico-controle-lancamentos-consolidado/
 - [Modelo de dados](docs/modelo-dados.md)
 - [Segurança](docs/seguranca.md)
 - [Roteiro de apresentação](docs/roteiro-apresentacao.md)
+
+O documento principal para o item obrigatório **"Desenho da solução completo (Arquitetura Alvo)"** é [docs/arquitetura.md](docs/arquitetura.md). Os demais arquivos da pasta `docs` funcionam como anexos especializados.
 
 ## Observações
 
