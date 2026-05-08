@@ -12,6 +12,8 @@ Essa abordagem visa evidenciar capacidade de priorização, tomada de decisão, 
 
 ---
 
+[### Presentacao do Solucao Arquitetural para a banca avaliatoria](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=32-1916&t=DOcd3sa6VzukK7o3-1)
+
 ## Atendimento Explícito ao Requisito Obrigatório
 
 Este arquivo foi consolidado para atender de forma direta o item obrigatório **"Desenho da solução completo (Arquitetura Alvo)"**. Mesmo existindo documentos de apoio na pasta `docs`, este documento é autossuficiente para leitura pelo avaliador e cobre, sozinho, os principais artefatos exigidos pelo desafio.
@@ -309,7 +311,6 @@ O controle de processamento usa Outbox no produtor e idempotência no consumidor
 - o ACK do consumidor só ocorre após atualização bem-sucedida do consolidado;
 - a tabela `evento_processado` evita dupla contabilização.
 
----
 
 ## 9. Modelo de Dados Relacional
 
