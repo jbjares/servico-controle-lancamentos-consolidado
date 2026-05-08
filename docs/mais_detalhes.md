@@ -2,7 +2,7 @@
 ## tomada de decisão, decomposição, análise de impacto, trade-offs, priorização, visão sistêmica e comunicação técnica.
 ## O MVP cobre os fluxos essenciais, enquanto os itens produtivos complementares foram tratados como backlog evolutivo documentado.
 
-
+[### Veja tambem nossa apresentacao simplificada no Figma](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=0-1&p=f&t=DOcd3sa6VzukK7o3-0)
 ---
 
 | Eixo                    | Implementado                                | Evidência                      |

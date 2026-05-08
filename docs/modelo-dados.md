@@ -126,3 +126,6 @@ FROM consolidado.evento_processado
 ORDER BY processado_em DESC
 LIMIT 10;
 ```
+
+
+[### Veja tambem nossa apresentacao simplificada no Figma](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=0-1&p=f&t=DOcd3sa6VzukK7o3-0)

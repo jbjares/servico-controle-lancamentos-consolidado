@@ -5,6 +5,7 @@
 [![CI](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/ci.yml/badge.svg)](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/ci.yml)
 [![K6 50 RPS Long](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/k6-50rps-long.yml/badge.svg)](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/k6-50rps-long.yml)
 
+[### Veja tambem nossa apresentacao simplificada no Figma](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=0-1&p=f&t=DOcd3sa6VzukK7o3-0)
 Esta entrega contém uma base executável e evolutiva com dois serviços Spring Boot:
 
 - `servico-lancamentos` com duas replicas locais (`servico-lancamentos-a` e `servico-lancamentos-b`)
