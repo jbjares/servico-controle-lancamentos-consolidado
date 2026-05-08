@@ -1,5 +1,5 @@
 # Trade-offs
-
+[### Veja tambem nossa apresentacao simplificada no Figma](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=0-1&p=f&t=DOcd3sa6VzukK7o3-0)
 Este documento registra as principais decisões arquiteturais, alternativas consideradas e justificativas.
 
 | Decisão | Alternativa | Benefício | Custo/Complexidade | Decisão adotada | Justificativa |

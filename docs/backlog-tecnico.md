@@ -57,3 +57,6 @@ Este backlog separa o que já foi implementado, o que é recomendado como próxi
 - Alertas externos reais por e-mail/Slack/PagerDuty.
 
 Esses itens são tecnicamente válidos, mas aumentariam a complexidade da POC sem serem necessários para demonstrar o requisito central do desafio.
+
+
+[### Veja tambem nossa apresentacao simplificada no Figma](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=0-1&p=f&t=DOcd3sa6VzukK7o3-0)

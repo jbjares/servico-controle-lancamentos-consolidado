@@ -11,9 +11,7 @@ Em vez de buscar cobertura exaustiva de todos os aspectos operacionais e produti
 Essa abordagem visa evidenciar capacidade de priorização, tomada de decisão, análise de trade-offs e visão sistêmica, preservando clareza técnica e foco nos objetivos da solução.
 
 ---
-
-
-[### Presentacao do Solucao Arquitetural para a banca avaliatoria](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=32-1916&t=DOcd3sa6VzukK7o3-1)
+[### Veja tambem nossa apresentacao simplificada no Figma](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=0-1&p=f&t=DOcd3sa6VzukK7o3-0)
 
 ---
 ## Atendimento Explícito ao Requisito Obrigatório
