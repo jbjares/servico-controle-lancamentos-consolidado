@@ -1,5 +1,7 @@
 # Implementação Base - Serviço de Controle de Lançamentos e Consolidado Diário
 
+[## Mais Detalhes](https://github.com/jbjares/servico-controle-lancamentos-consolidado/blob/develop/docs/mais_detalhes.md)
+
 [![CI](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/ci.yml/badge.svg)](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/ci.yml)
 [![K6 50 RPS Long](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/k6-50rps-long.yml/badge.svg)](https://github.com/jbjares/servico-controle-lancamentos-consolidado/actions/workflows/k6-50rps-long.yml)
 
@@ -376,3 +378,6 @@ O documento principal para o item obrigatório **"Desenho da solução completo 
 - O consolidado possui proteção simples de idempotência por `idEvento`
 - Cada serviço versiona seu schema com Liquibase
 - Esta base prioriza clareza, compilação e evolução gradual
+
+
+
