@@ -12,8 +12,10 @@ Essa abordagem visa evidenciar capacidade de priorização, tomada de decisão, 
 
 ---
 
+
 [### Presentacao do Solucao Arquitetural para a banca avaliatoria](https://www.figma.com/board/5Mu0eeVjXsk33DOw9oSgm4/AmazingClient?node-id=32-1916&t=DOcd3sa6VzukK7o3-1)
 
+---
 ## Atendimento Explícito ao Requisito Obrigatório
 
 Este arquivo foi consolidado para atender de forma direta o item obrigatório **"Desenho da solução completo (Arquitetura Alvo)"**. Mesmo existindo documentos de apoio na pasta `docs`, este documento é autossuficiente para leitura pelo avaliador e cobre, sozinho, os principais artefatos exigidos pelo desafio.
@@ -706,6 +708,7 @@ No `servico-consolidado-diario`, a suíte cobre principalmente:
 - descarte seguro de duplicidade;
 - comportamento de reprocessamento controlado.
 
+
 ### 15.3 Evidência dos Requisitos Não Funcionais
 
 O requisito mais crítico do desafio foi validado da seguinte forma:
@@ -715,6 +718,19 @@ O requisito mais crítico do desafio foi validado da seguinte forma:
 - **Pico de 50 req/s com perda máxima de 5%:** o cenário automatizado com k6 foi preparado para validar taxa sustentada de `50 req/s`, latência observável e volume de falhas dentro da tolerância do desafio.
 
 Em termos arquiteturais, isso comprova que o fluxo principal de negócio fica protegido por desacoplamento assíncrono, Outbox Pattern, DLQ, retry e idempotência.
+
+=======
+
+### 15.3 Evidência dos Requisitos Não Funcionais
+
+O requisito mais crítico do desafio foi validado da seguinte forma:
+
+- **Disponibilidade de lançamentos com consolidado indisponível:** o `servico-lancamentos` continua aceitando `POST /api/lancamentos`, persistindo o lançamento e registrando o evento no Outbox mesmo quando o `servico-consolidado-diario` está parado;
+- **Processamento assíncrono posterior:** após a volta do consumidor, os eventos pendentes são consumidos e o saldo diário é recalculado;
+- **Pico de 50 req/s com perda máxima de 5%:** o cenário automatizado com k6 foi preparado para validar taxa sustentada de `50 req/s`, latência observável e volume de falhas dentro da tolerância do desafio.
+
+Em termos arquiteturais, isso comprova que o fluxo principal de negócio fica protegido por desacoplamento assíncrono, Outbox Pattern, DLQ, retry e idempotência.
+
 
 ### 15.4 Ferramentas e Automação
 
