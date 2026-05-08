@@ -44,7 +44,3 @@
 | CI/CD com testes         | Evidencia qualidade e repetibilidade    | Aumenta esforço inicial                                    |
 | DLQ como backlog         | Reconhece evolução produtiva necessária | Não foi implementado no MVP                                |
 
----
-
-Email para contato:
-jbjares@gmail.com
